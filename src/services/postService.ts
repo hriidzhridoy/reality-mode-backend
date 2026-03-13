@@ -75,3 +75,19 @@ export const getFeed = async (
 
   return { posts, total };
 };
+
+export const getPublicFeed = async (page: number, limit: number) => {
+  const skip = (page - 1) * limit;
+  const posts = await prisma.post.findMany({
+    where: { privacy: Privacy.PUBLIC },
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
+    include: {
+      user: { select: { id: true, name: true, bio: true } },
+      _count: { select: { reactions: true } },
+    },
+  });
+  const total = await prisma.post.count({ where: { privacy: Privacy.PUBLIC } });
+  return { posts, total };
+};
