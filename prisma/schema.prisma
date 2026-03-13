@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts           Post[]
+  reactions       Reaction[]
+  refreshTokens   RefreshToken[]
+  closeCircle     CloseCircle[]  @relation("CircleOwner")
+  inCloseCircleOf CloseCircle[]  @relation("CircleMember")
+
+  @@map("users")
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  userId    String
+  highlight String
+  reality   String
+  privacy   Privacy  @default(PUBLIC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@map("posts")
+}
+
+model Reaction {
+  id           String       @id @default(uuid())
+  userId       String
+  postId       String
+  reactionType ReactionType
+  createdAt    DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("reactions")
+}
+
+model CloseCircle {
+  id        String   @id @default(uuid())
+  ownerId   String
+  memberId  String
+  createdAt DateTime @default(now())
+
+  owner  User @relation("CircleOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  member User @relation("CircleMember", fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, memberId])
+  @@map("close_circles")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+enum Privacy {
+  PUBLIC
+  CLOSE_CIRCLE
+  PRIVATE
+}
+
+enum ReactionType {
+  RESPECT
+  RELATE
+  INSPIRED
+  STAY_STRONG
+}
