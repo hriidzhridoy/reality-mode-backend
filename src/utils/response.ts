@@ -22,9 +22,20 @@ export const sendError = (
   return res.status(statusCode).json({ success: false, message, errors });
 };
 
-export const parsePagination = (page?: string, limit?: string) => {
-  const parsedPage = Math.max(1, parseInt(page || "1") || 1);
-  const parsedLimit = Math.min(50, Math.max(1, parseInt(limit || "20") || 20));
+export const parsePagination = (
+  page?: string | string[], // ← accept both types
+  limit?: string | string[], // ← accept both types
+) => {
+  // If it's an array (e.g. ?page=1&page=2), just take the first value
+  const rawPage = Array.isArray(page) ? page[0] : page;
+  const rawLimit = Array.isArray(limit) ? limit[0] : limit;
+
+  const parsedPage = Math.max(1, parseInt(rawPage || "1") || 1);
+  const parsedLimit = Math.min(
+    50,
+    Math.max(1, parseInt(rawLimit || "20") || 20),
+  );
+
   return {
     page: parsedPage,
     limit: parsedLimit,
